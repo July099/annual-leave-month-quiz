@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#2B1810">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>你适合几月请年假</title>
+<style>
+:root{
+  --u: 1px;
+  --ink:#4F1E0E;        /* 正文深棕，取自原图实测 */
+  --ink2:#8A5A42;       /* 次要标签 */
+  --hot:#B8491A;        /* 强调 */
+  --card:#FCEDD6;       /* 卡片底色，取自原图实测 */
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0;height:100%;background:#2B1810;overflow:hidden;
+  font-family:"Songti SC",serif;-webkit-user-select:none;user-select:none;
+  font-synthesis:none;-webkit-text-size-adjust:100%}
+#wrap{display:flex;align-items:center;justify-content:center;height:100vh;height:100dvh}
+#stage{position:relative;width:min(100vw,calc(100dvh * 853 / 1844));aspect-ratio:853/1844;
+  overflow:hidden;background:#7FB6D9}
+.bgimg{position:absolute;inset:0;width:100%;height:100%;display:none;
+  image-rendering:-webkit-optimize-contrast}
+.bgimg.on{display:block}
+.layer{position:absolute}
+.px{image-rendering:pixelated;image-rendering:crisp-edges;display:block;margin:0 auto}
+#ui{position:absolute;inset:0}
+.hidden{display:none !important}
+
+/* 题号数字：居中于木牌的「第」「题」之间 */
+#qnum{left:calc(var(--u)*426.5);top:calc(var(--u)*387.5);transform:translate(-50%,-50%);text-align:center}
+
+/* 题干：贴住选项框上方，多行时向上生长 */
+#stem{left:calc(var(--u)*139);top:calc(var(--u)*505);width:calc(var(--u)*574);
+  height:calc(var(--u)*296);display:flex;flex-direction:column;justify-content:flex-end;
+  align-items:center;padding-bottom:calc(var(--u)*100)}
+
+/* 两个选项 */
+.opt{left:calc(var(--u)*425.5);width:calc(var(--u)*520);transform:translate(-50%,-50%);
+  text-align:center;cursor:pointer}
+#opt0{top:calc(var(--u)*883.5)}
+#opt1{top:calc(var(--u)*1093.5)}
+.opt .px{margin-left:auto;margin-right:auto}
+
+/* 底部按钮热区（按钮图形在背景图上） */
+.hit{position:absolute;cursor:pointer;border-radius:calc(var(--u)*10)}
+#hitPrev{left:calc(var(--u)*68);top:calc(var(--u)*1540);
+  width:calc(var(--u)*304);height:calc(var(--u)*114)}
+#hitNext{left:calc(var(--u)*481);top:calc(var(--u)*1540);
+  width:calc(var(--u)*304);height:calc(var(--u)*114)}
+#hitPrev.disabled{background:rgba(43,24,16,.42);pointer-events:none}
+#hitPrev:active,#hitNext:active{background:rgba(43,24,16,.14)}
+/* 男版主页的按钮图形比女版低 34px */
+#stage.male #hitPrev{top:calc(var(--u)*1574)}
+#stage.male #hitNext{top:calc(var(--u)*1574)}
+
+/* 结果层：盖住主卡内区 */
+#result{left:calc(var(--u)*104);top:calc(var(--u)*528);
+  width:calc(var(--u)*644);height:calc(var(--u)*734);
+  background:var(--card);border-radius:calc(var(--u)*16);
+  padding:calc(var(--u)*30) calc(var(--u)*34) calc(var(--u)*24);
+  display:flex;flex-direction:column;overflow-y:auto;-webkit-overflow-scrolling:touch}
+#result::-webkit-scrollbar{display:none}
+.rl{display:flex;flex-direction:column;align-items:center}
+.rl .px{margin-left:auto;margin-right:auto}
+.sep{width:100%;height:calc(var(--u)*2);background:#E2CDA8;
+  margin:calc(var(--u)*16) 0;flex:none}
+
+/* 结果页时盖住木牌上的「第」「题」，改写标题（木牌底色取自原图实测 #F0B87F） */
+#plate{left:calc(var(--u)*312);top:calc(var(--u)*362);width:calc(var(--u)*228);
+  height:calc(var(--u)*60);background:#F0B87F;border-radius:calc(var(--u)*3);
+  display:flex;align-items:center;justify-content:center}
+#shareBtn{margin-top:auto;flex:none;background:#F6E2BE;border:calc(var(--u)*3) solid var(--ink);
+  border-radius:calc(var(--u)*8);padding:calc(var(--u)*13) 0;cursor:pointer;
+  display:flex;align-items:center;justify-content:center}
+#shareBtn:active{background:#EBD3A8}
+#again{margin-top:calc(var(--u)*11);text-align:center;cursor:pointer;flex:none;
+  display:flex;justify-content:center}
+#months{display:flex;flex-wrap:wrap;gap:calc(var(--u)*7);justify-content:center;
+  margin:calc(var(--u)*6) 0 calc(var(--u)*4)}
+.mcell{width:calc(var(--u)*40);height:calc(var(--u)*40);flex:none;
+  background:#F2A83C;border:calc(var(--u)*3) solid var(--ink);border-radius:calc(var(--u)*4)}
+#toast{position:absolute;left:50%;top:calc(var(--u)*1400);transform:translate(-50%,-50%);
+  background:rgba(43,24,16,.92);color:#FCEDD6;padding:calc(var(--u)*10) calc(var(--u)*22);
+  border-radius:calc(var(--u)*8);opacity:0;transition:opacity .25s;pointer-events:none;
+  font-size:calc(var(--u)*26);white-space:nowrap}
+#toast.on{opacity:1}
+
+/* 剧情层：封面之后的过场。两张图，第二张的气泡里逐句出字 */
+.story{position:absolute;inset:0;z-index:25;overflow:hidden;
+  background:#12182A;cursor:pointer}
+.storyImg{position:absolute;inset:0;width:100%;height:100%;
+  object-fit:cover;object-position:center;display:block}
+/* 气泡文字：居中于气泡白区（853×1844 基准，实测中心 194,658） */
+#bubble{position:absolute;left:calc(var(--u)*194);top:calc(var(--u)*658);
+  transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center}
+.tapHint{position:absolute;left:calc(var(--u)*426.5);top:calc(var(--u)*1742);
+  transform:translate(-50%,-50%);opacity:.8;
+  animation:blink 1.6s ease-in-out infinite}
+@keyframes blink{0%,100%{opacity:.85}50%{opacity:.22}}
+
+/* 选性别层：整页图 + 两块卡片热区 */
+#pick{position:absolute;inset:0;z-index:20;overflow:hidden;background:#12182A}
+#pickImg{position:absolute;inset:0;width:100%;height:100%;
+  object-fit:cover;object-position:center;display:block}
+.pickHit{position:absolute;cursor:pointer;border-radius:calc(var(--u)*18)}
+#pickM{left:calc(var(--u)*40);top:calc(var(--u)*633);
+  width:calc(var(--u)*773);height:calc(var(--u)*394)}
+#pickF{left:calc(var(--u)*40);top:calc(var(--u)*1071);
+  width:calc(var(--u)*773);height:calc(var(--u)*396)}
+.pickHit:active{background:rgba(255,255,255,.14)}
+
+/* 封面层：进入应用的第一屏。「开始测试」按钮是图里画好的，这里只叠点击热区 */
+/* 深色底只是兜底：封面图与舞台同比例，实际会满屏，看不到这层 */
+#cover{position:absolute;inset:0;z-index:30;overflow:hidden;
+  background:linear-gradient(180deg,#1D3040 0%,#101E2E 40%,#050D1C 100%)}
+#coverImg{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;display:block}
+#coverHit{position:absolute;cursor:pointer;border-radius:calc(var(--u)*999)}
+#coverHit:active{background:rgba(255,215,110,.16)}
+</style>
+</head>
+<body>
+<div id="wrap">
+  <div id="stage">
+    <img id="bgF" class="bgimg on" alt="" src="assets/主页女.webp">
+    <img id="bgM" class="bgimg" alt="" src="assets/主页男.webp">
+    <div id="ui">
+      <div id="qnum" class="layer"></div>
+      <div id="plate" class="layer hidden"></div>
+      <div id="stem" class="layer"></div>
+      <div id="opt0" class="layer opt"></div>
+      <div id="opt1" class="layer opt"></div>
+      <div id="hitPrev" class="hit"></div>
+      <div id="hitNext" class="hit"></div>
+      <div id="result" class="layer hidden"></div>
+      <div id="toast"></div>
+    </div>
+    <div id="pick" class="hidden">
+      <img id="pickImg" alt="" src="assets/选择性别.webp">
+      <div class="pickHit" id="pickM"></div>
+      <div class="pickHit" id="pickF"></div>
+    </div>
+    <div id="storyA" class="story hidden">
+      <img class="storyImg" alt="" src="assets/故事A.webp">
+    </div>
+    <div id="storyB" class="story hidden">
+      <img class="storyImg" alt="" src="assets/故事B.webp">
+      <div id="bubble"></div>
+    </div>
+    <div id="cover">
+      <img id="coverImg" alt="" src="assets/封面.webp">
+      <div id="coverHit"></div>
+    </div>
+  </div>
+</div>
+<script>
+(function(){
+"use strict";
+
+/* ============ 1. 像素字渲染 ============
+   字体：系统宋体（Songti SC）→ 小字号光栅化 → 二值化 → 最近邻放大
+   原图字色 #4F1E0E，字面高：题干 47 / 选项 42 / 题号 32（基准 853px 宽） */
+var FF = '"Songti SC","STSong","SimSun","Noto Serif CJK SC",serif';
+var BASE_FS = 28;
+var THRESH = 128;
+
+var _mc = document.createElement('canvas').getContext('2d');
+function fontStr(px, weight){ return (weight || 900) + ' ' + px + 'px ' + FF; }
+_mc.font = fontStr(BASE_FS);
+
+/* 标准汉字（满框字）在 BASE_FS 下的字面高，用于统一所有字的缩放比例 */
+var STD_H = (function(){
+  var c = document.createElement('canvas');
+  c.width = 80; c.height = 80;
+  var x = c.getContext('2d');
+  x.font = fontStr(BASE_FS); x.textBaseline = 'top'; x.fillStyle = '#000';
+  x.fillText('国', 8, 20);
+  var d = x.getImageData(0,0,80,80).data, mn = 80, mx = -1;
+  for(var y=0;y<80;y++) for(var xx=0;xx<80;xx++){
+    if(d[(y*80+xx)*4+3] > THRESH){ if(y<mn) mn=y; if(y>mx) mx=y; }
+  }
+  return (mx-mn+1) || 21;
+})();
+
+function hex2rgb(h){
+  return [parseInt(h.substr(1,2),16), parseInt(h.substr(3,2),16), parseInt(h.substr(5,2),16)];
+}
+
+/* 渲染一行文字为像素字 canvas；scale 为统一缩放比，保证所有行字宽一致 */
+function renderLine(text, scale, colorHex, weight){
+  var w = BASE_FS, h = BASE_FS;
+  var m = _mc.measureText(text);
+  var cw = Math.ceil(m.width) + BASE_FS*3;
+  var ch = BASE_FS*3;
+
+  var c = document.createElement('canvas');
+  c.width = cw; c.height = ch;
+  var x = c.getContext('2d');
+  x.font = fontStr(BASE_FS, weight); x.textBaseline = 'top'; x.fillStyle = '#000';
+  x.fillText(text, BASE_FS, BASE_FS);
+
+  var d = x.getImageData(0,0,cw,ch).data;
+  var minX = cw, minY = ch, maxX = -1, maxY = -1;
+  for(var yy=0; yy<ch; yy++){
+    var row = yy*cw;
+    for(var xx=0; xx<cw; xx++){
+      if(d[(row+xx)*4+3] > THRESH){
+        if(xx<minX) minX=xx; if(xx>maxX) maxX=xx;
+        if(yy<minY) minY=yy; if(yy>maxY) maxY=yy;
+      }
+    }
+  }
+  if(maxX < 0){ maxX = minX = 0; maxY = minY = 0; }
+
+  var gw = maxX-minX+1, gh = maxY-minY+1;
+  var ow = Math.max(1, Math.round(gw*scale));
+  var oh = Math.max(1, Math.round(gh*scale));
+  var out = document.createElement('canvas');
+  out.width = ow; out.height = oh;
+  var o = out.getContext('2d');
+  var img = o.createImageData(ow, oh);
+  var rgb = hex2rgb(colorHex);
+  var dd = img.data;
+  for(var y2=0; y2<oh; y2++){
+    var sy = minY + Math.min(gh-1, Math.floor(y2/scale));
+    var srow = sy*cw;
+    for(var x2=0; x2<ow; x2++){
+      var sx = minX + Math.min(gw-1, Math.floor(x2/scale));
+      if(d[(srow+sx)*4+3] > THRESH){
+        var k = (y2*ow+x2)*4;
+        dd[k]=rgb[0]; dd[k+1]=rgb[1]; dd[k+2]=rgb[2]; dd[k+3]=255;
+      }
+    }
+  }
+  o.putImageData(img, 0, 0);
+  out.className = 'px';
+  out.style.width = 'calc(var(--u)*' + ow + ')';
+  out.style.height = 'calc(var(--u)*' + oh + ')';
+  return out;
+}
+
+/* 按目标字面高换算统一 scale */
+function scaleFor(targetH){ return targetH / STD_H; }
+
+/* 中文断行：贪心铺满 → 回退到最近的标点后断行，保证断点落在标点处 */
+var PUNCT = '。，、；：？！》）】」”’…·';
+function wrapLines(text, scale, maxW){
+  var eff = BASE_FS * scale;                       /* 目标字号的等效 font-size */
+  _mc.font = fontStr(eff);
+  var lines = [], rest = text;
+  while(rest.length){
+    var n = 0;
+    while(n < rest.length){
+      if(_mc.measureText(rest.slice(0, n+1)).width > maxW && n > 0) break;
+      n++;
+    }
+    var take = n;
+    if(take < rest.length){
+      for(var k = take; k > Math.max(1, take - 10); k--){  /* 往回最多找 10 个字 */
+        if(PUNCT.indexOf(rest.charAt(k-1)) >= 0){
+          if(_mc.measureText(rest.slice(0, k)).width >= maxW * 0.38) take = k;
+          break;
+        }
+      }
+      /* 断点紧跟标点时，把标点拉回上一行 */
+      if(PUNCT.indexOf(rest.charAt(take-1)) < 0 &&
+         take < rest.length && PUNCT.indexOf(rest.charAt(take)) >= 0) take++;
+    }
+    lines.push(rest.slice(0, take));
+    rest = rest.slice(take);
+  }
+  _mc.font = fontStr(BASE_FS);
+  return lines;
+}
+
+/* 渲染一段可能换行的文字，返回容器 div */
+function textBlock(text, targetH, colorHex, maxW, lineGapRatio, weight){
+  var box = document.createElement('div');
+  var scale = scaleFor(targetH);
+  var lines = wrapLines(text, scale, maxW);
+  var gap = Math.round(targetH * (lineGapRatio === undefined ? 0.48 : lineGapRatio));
+  for(var i=0;i<lines.length;i++){
+    if(!lines[i]) continue;
+    var el = renderLine(lines[i], scale, colorHex, weight);
+    if(i < lines.length-1) el.style.marginBottom = 'calc(var(--u)*' + gap + ')';
+    box.appendChild(el);
+  }
+  return box;
+}
+
+/* ============ 2. 题库 ============ */
+var CITIES = {
+  '三亚':     {m:12, why:'全年最舒服的温度，海水还能下，避开春节涨价'},
+  '涠洲岛':   {m:11, why:'台风季结束，海水最清，船班最稳'},
+  '厦门':     {m:11, why:'不闷不晒，环岛路骑车最舒服'},
+  '青岛':     {m:8,  why:'开海加啤酒节，海水终于能下水'},
+  '婺源':     {m:3,  why:'油菜花满山，白墙黑瓦全被衬出来'},
+  '武夷山':   {m:4,  why:'春茶开采，九曲溪水位正好'},
+  '阳朔':     {m:10, why:'水位合适，秋天通透，漓江最上镜'},
+  '恩施':     {m:5,  why:'瀑布水量足，峡谷里全是水汽'},
+  '长白山':   {m:2,  why:'雪最厚，天池封冰，温泉反差最大'},
+  '禾木':     {m:1,  why:'雪村最安静的时候，早上有炊烟'},
+  '哈尔滨':   {m:1,  why:'冰雪大世界巅峰期'},
+  '阿勒泰':   {m:2,  why:'粉雪最好的时候，雪场还没那么挤'},
+  '拉萨':     {m:5,  why:'雨季前，能见度最高，布宫最清楚'},
+  '青海湖':   {m:7,  why:'油菜花加环湖，一年就这一次'},
+  '稻城亚丁': {m:9,  why:'彩林刚开始，晴天多，人比 10 月少'},
+  '甘南':     {m:6,  why:'草原返青，人少，天很蓝'}
+};
+
+var Q1 = { stem:'你想去哪里？',
+  a:'去热的地方。我要出汗。', b:'去冷的地方。我要清醒。' };
+
+var Q2 = {
+  hot:  { stem:'热的地方，你想去水边还是山里？',
+          a:'水边。海、岛、湖，脚要能踩进去。', b:'山里。森林、峡谷，耳朵里要有水声。' },
+  cold: { stem:'冷的地方，你想去看雪还是上高原？',
+          a:'看雪。能踩出声音的那种。', b:'高原。天特别大，云特别低。' }
+};
+
+var Q3 = {
+  'hot-water':     { stem:'你想要哪种水？',
+                     a:'岛上的。四面都是海，出不去。', b:'城边的。楼下是海，楼上是街。' },
+  'hot-mountain':  { stem:'你想要哪种山？',
+                     a:'有村子的。白墙黑瓦，春天开花。', b:'有江水和峡谷的。要坐船进去。' },
+  'cold-snow':     { stem:'你想要哪种雪？',
+                     a:'待着。看雪落在窗外，人别动。', b:'动着。滑一整天，或者把整条街走完。' },
+  'cold-plateau':  { stem:'你想要哪种高原？',
+                     a:'慢一点。晒着太阳发呆，看云走。', b:'拼一点。走完这条线，把山拿下来。' }
+};
+
+var Q4 = {
+  p1:{ a:{t:'最南边的那座城，什么都熟，什么都方便。', c:'三亚'},
+       b:{t:'一个要坐船才能到的岛，船班看天气。',     c:'涠洲岛'} },
+  p2:{ a:{t:'南方海岸。旧楼、咖啡馆、慢。',           c:'厦门'},
+       b:{t:'北方海岸。夏天开海，啤酒管够。',         c:'青岛'} },
+  p3:{ a:{t:'想看花开在村子里的。',                   c:'婺源'},
+       b:{t:'想去喝茶的，在山里泡几天。',             c:'武夷山'} },
+  p4:{ a:{t:'想顺着江走，抬头是山。',                 c:'阳朔'},
+       b:{t:'想钻进峡谷，抬头是天。',                 c:'恩施'} },
+  p5:{ a:{t:'想泡温泉看雪，最好有度假区。',           c:'长白山'},
+       b:{t:'想住进一个只有几十户人家的雪村。',       c:'禾木'} },
+  p6:{ a:{t:'想在城市里看冰雕、走老街。',             c:'哈尔滨'},
+       b:{t:'想上雪场，滑到腿软。',                   c:'阿勒泰'} },
+  p7:{ a:{t:'想在城里有寺庙和甜茶。',                 c:'拉萨'},
+       b:{t:'想绕着一个大湖走一圈。',                 c:'青海湖'} },
+  p8:{ a:{t:'想看雪山和海子，走一段高海拔的线。',     c:'稻城亚丁'},
+       b:{t:'想看草原和寺庙，路比较缓。',             c:'甘南'} }
+};
+
+var Q5 = { stem:'年假摆在你面前，你怎么用？',
+  a:'订票，走人。年假攒着也是过期。', b:'哪也不去，睡到自然醒。' };
+
+/* 由前三题答案推导所属包 */
+function packOf(a1, a2, a3){
+  if(a1 === 0){                                   /* 热 */
+    if(a2 === 0) return a3 === 0 ? 'p1' : 'p2';   /* 水边 */
+    return a3 === 0 ? 'p3' : 'p4';                /* 山里 */
+  }
+  if(a2 === 0) return a3 === 0 ? 'p5' : 'p6';     /* 看雪 */
+  return a3 === 0 ? 'p7' : 'p8';                  /* 高原 */
+}
+
+/* 当前题面 */
+function questionAt(i, ans){
+  if(i === 0) return Q1;
+  if(i === 1) return ans[0] === 0 ? Q2.hot : Q2.cold;
+  if(i === 2){
+    var k = (ans[0] === 0 ? 'hot' : 'cold') + '-' + (ans[1] === 0 ? (ans[0]===0?'water':'snow') : (ans[0]===0?'mountain':'plateau'));
+    return Q3[k];
+  }
+  if(i === 3){
+    var p = Q4[packOf(ans[0], ans[1], ans[2])];
+    return { stem:'最后确认一下，你要哪个画面？', a:p.a.t, b:p.b.t };
+  }
+  return Q5;
+}
+
+/* 倒计时文案 */
+function countdown(m){
+  var now = new Date().getMonth() + 1;
+  var d = m - now;
+  if(d === 0) return '就是现在。去提申请。';
+  if(d < 0)   return '今年的 ' + m + ' 月过了。要么等明年，要么下个月就走。';
+  if(d <= 3)  return '现在是 ' + now + ' 月，还有 ' + d + ' 个月。提前两周报备就够，机票还没涨。';
+  if(d <= 8)  return '现在是 ' + now + ' 月，还有 ' + d + ' 个月。够你把活儿排开，也够你等一张便宜的机票。';
+  return '现在是 ' + now + ' 月，还有 ' + d + ' 个月。时间还长，先把年假攒够。';
+}
+function leaveApplyText(m){
+  var prev = (m === 1) ? 12 : m - 1;
+  return prev + ' 月中旬把申请交上去，' + m + ' 月初落地，刚好';
+}
+
+/* ============ 3. 状态与渲染 ============ */
+var ans = [null,null,null,null,null];
+var gender = null;                 /* 'M' / 'F'，决定用哪张主页 */
+var step = 0;
+var done = false;
+
+var $ = function(id){ return document.getElementById(id); };
+var stage, elQnum, elStem, elOpt = [], elPrev, elNext, elResult, elPlate;
+
+function layout(){
+  var u = stage.clientWidth / 853;
+  document.documentElement.style.setProperty('--u', u + 'px');
+}
+
+function clear(node){ while(node.firstChild) node.removeChild(node.firstChild); }
+
+/* 题号：数字，字面高 32 */
+function drawQnum(){
+  clear(elQnum);
+  elQnum.appendChild(renderLine(String(step + 1), scaleFor(32), '#4F1E0E'));
+}
+
+/* 题干：字面高 47，宽度 574，居中 */
+function drawStem(q){
+  clear(elStem);
+  elStem.appendChild(textBlock(q.stem, 47, '#4F1E0E', 574, 0.48));
+}
+
+/* 选项：字面高 42，宽度 520；选中后变色 */
+function drawOptions(q){
+  var labels = ['A. ', 'B. '];
+  var texts  = [q.a, q.b];
+  for(var i=0;i<2;i++){
+    var node = elOpt[i];
+    clear(node);
+    var picked = ans[step] === i;
+    var color = picked ? '#B8491A' : '#4F1E0E';
+    node.appendChild(textBlock(labels[i] + texts[i], 42, color, 520, 0.46));
+  }
+}
+
+function drawNav(){
+  if(step === 0 || done) elPrev.classList.add('disabled');
+  else elPrev.classList.remove('disabled');
+}
+
+function render(){
+  if(done) return;
+  var q = questionAt(step, ans);
+  drawQnum(); drawStem(q); drawOptions(q); drawNav();
+}
+
+/* ============ 4. 结果页 ============ */
+function line(text, h, color, maxW, gap){
+  return textBlock(text, h, color, maxW || 576, gap);
+}
+function sep(){ var d = document.createElement('div'); d.className='sep'; return d; }
+function spacer(px){ var d=document.createElement('div'); d.style.height='calc(var(--u)*'+px+')'; d.style.flex='none'; return d; }
+
+function buildResult(){
+  clear(elResult);
+  var q5 = ans[4];
+  var shareText;
+
+  if(q5 === 1){                       /* B 线：躺平结局 */
+    shareText = '我哪个月请年假都行。你呢？';
+    elResult.appendChild(line('你的答案', 24, '#8A5A42'));
+    elResult.appendChild(spacer(8));
+    elResult.appendChild(line('哪也不去', 50, '#4F1E0E'));
+    elResult.appendChild(sep());
+    elResult.appendChild(line('所以', 24, '#8A5A42'));
+    elResult.appendChild(spacer(8));
+    elResult.appendChild(line('你哪个月请年假都行', 50, '#B8491A'));
+    elResult.appendChild(spacer(16));
+    elResult.appendChild(line('不挑地方的人，也不挑月份。', 26, '#4F1E0E'));
+    elResult.appendChild(spacer(6));
+    elResult.appendChild(line('你缺的不是一张机票，是一张能睡到自然醒的床。', 26, '#4F1E0E'));
+    elResult.appendChild(spacer(22));
+    var grid = document.createElement('div');
+    grid.id = 'months';
+    for(var i=0;i<12;i++){ var c=document.createElement('div'); c.className='mcell'; grid.appendChild(c); }
+    elResult.appendChild(grid);
+    elResult.appendChild(spacer(16));
+    elResult.appendChild(line('1–12 月全部点亮', 24, '#8A5A42'));
+    elResult.appendChild(sep());
+    elResult.appendChild(line('哪天你想出门了，回来再测一次。', 25, '#4F1E0E'));
+  }else{                              /* A 线：年假月 */
+    var city = Q4[packOf(ans[0], ans[1], ans[2])][ans[3] === 0 ? 'a' : 'b'].c;
+    var info = CITIES[city];
+    shareText = '我的年假该请 ' + info.m + ' 月，去' + city + '。你呢？';
+
+    elResult.appendChild(line('你想去的地方', 24, '#8A5A42'));
+    elResult.appendChild(spacer(8));
+    elResult.appendChild(line(city, 56, '#4F1E0E'));
+    elResult.appendChild(sep());
+    elResult.appendChild(line('它最好的时候', 24, '#8A5A42'));
+    elResult.appendChild(spacer(6));
+    elResult.appendChild(line(info.m + ' 月', 40, '#B8491A'));
+    elResult.appendChild(spacer(8));
+    elResult.appendChild(line(info.why, 25, '#4F1E0E', 576, 0.5));
+    elResult.appendChild(sep());
+    elResult.appendChild(line('你的年假该请', 24, '#8A5A42'));
+    elResult.appendChild(spacer(4));
+    elResult.appendChild(line(info.m + ' 月', 72, '#4F1E0E'));
+    elResult.appendChild(spacer(16));
+    elResult.appendChild(line(leaveApplyText(info.m), 29, '#4F1E0E', 576, 0.5));
+    elResult.appendChild(spacer(8));
+    elResult.appendChild(line(countdown(info.m), 24, '#B8491A', 576, 0.5));
+  }
+
+  var btn = document.createElement('div');
+  btn.id = 'shareBtn';
+  btn.appendChild(renderLine('复制分享文案', scaleFor(28), '#4F1E0E'));
+  (function(){
+    var t = shareText;
+    btn.addEventListener('click', function(){ copy(t); });
+  })();
+  elResult.appendChild(btn);
+
+  var again = document.createElement('div');
+  again.id = 'again';
+  again.appendChild(renderLine('重新测一次', scaleFor(23), '#8A5A42'));
+  again.addEventListener('click', reset);
+  elResult.appendChild(again);
+}
+
+function copy(text){
+  var ok = function(){ toast('已复制，去发给朋友'); };
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text).then(ok, function(){ legacyCopy(text); ok(); });
+  }else{ legacyCopy(text); ok(); }
+}
+function legacyCopy(text){
+  var ta = document.createElement('textarea');
+  ta.value = text; ta.style.position='fixed'; ta.style.opacity='0';
+  document.body.appendChild(ta); ta.select();
+  try{ document.execCommand('copy'); }catch(e){}
+  document.body.removeChild(ta);
+}
+var toastTimer = null;
+function toast(msg){
+  var t = $('toast');
+  t.textContent = msg; t.classList.add('on');
+  if(toastTimer) clearTimeout(toastTimer);
+  toastTimer = setTimeout(function(){ t.classList.remove('on'); }, 1600);
+}
+
+/* ============ 5. 流程 ============ */
+function choose(i){
+  if(done) return;
+  ans[step] = i;
+  drawOptions(questionAt(step, ans));
+}
+function next(){
+  if(done) return;
+  if(ans[step] === null){ toast('先选一个'); return; }
+  if(step === 4){ showResult(); return; }
+  step++; render();
+}
+function prev(){
+  if(done || step === 0) return;
+  step--; render();
+}
+function showResult(){
+  done = true;
+  elQnum.style.visibility = 'hidden';
+  elStem.style.visibility = 'hidden';
+  elOpt[0].style.visibility = 'hidden';
+  elOpt[1].style.visibility = 'hidden';
+  elPrev.classList.add('disabled');
+  elNext.classList.add('disabled');
+  clear(elPlate);
+  elPlate.appendChild(renderLine('测试结果', scaleFor(32), '#4F1E0E'));
+  elPlate.classList.remove('hidden');
+  buildResult();
+  elResult.classList.remove('hidden');
+  elResult.scrollTop = 0;
+}
+function reset(){
+  ans = [null,null,null,null,null];
+  step = 0; done = false;
+  elResult.classList.add('hidden');
+  elPlate.classList.add('hidden');
+  clear(elPlate);
+  elQnum.style.visibility = '';
+  elStem.style.visibility = '';
+  elOpt[0].style.visibility = '';
+  elOpt[1].style.visibility = '';
+  elNext.classList.remove('disabled');
+  render();
+}
+
+/* ============ 6. 过场剧情 ============
+   封面之后先走两页剧情：storyA 无气泡，storyB 气泡里逐句出字。
+   气泡白区实测（853×1844 基准）：x 49–339 / y 597–718，中心 (194, 658)，
+   字面高 28 时最长的「先请年假冷静一下」约 241px，塞得进 280 的可用宽。 */
+var BUBBLE_LINES = ['……', '受够了', '要不离职吧？', '先请年假冷静一下', '现在吗', '我想想'];
+var bubbleIdx = 0;
+
+function drawBubble(){
+  var el = $('bubble');
+  clear(el);
+  if(bubbleIdx < 0 || bubbleIdx >= BUBBLE_LINES.length) return;
+  el.appendChild(renderLine(BUBBLE_LINES[bubbleIdx], scaleFor(28), '#2A2738'));
+}
+
+/* 两张剧情图底部各放一个闪烁提示，不然用户不知道要点 */
+function drawHint(){
+  ['storyA','storyB'].forEach(function(id){
+    var d = document.createElement('div');
+    d.className = 'tapHint';
+    d.appendChild(renderLine('轻触继续', scaleFor(24), '#D8C6A8'));
+    $(id).appendChild(d);
+  });
+}
+
+function enterStoryA(){
+  $('cover').classList.add('hidden');
+  $('storyA').classList.remove('hidden');
+}
+function enterStoryB(){
+  $('storyA').classList.add('hidden');
+  $('storyB').classList.remove('hidden');
+  bubbleIdx = 0;
+  drawBubble();                       /* 进页先给一句「……」，留个停顿 */
+}
+function tapStoryB(){
+  if(bubbleIdx < BUBBLE_LINES.length - 1){
+    bubbleIdx++;
+    drawBubble();
+  }else{
+    $('storyB').classList.add('hidden');
+    $('pick').classList.remove('hidden');
+  }
+}
+
+function startWith(g){
+  gender = g;
+  $('bgF').classList.toggle('on', g === 'F');
+  $('bgM').classList.toggle('on', g === 'M');
+  stage.classList.toggle('male', g === 'M');
+  $('pick').classList.add('hidden');
+}
+
+/* ============ 7. 封面：进入应用的第一屏 ============
+   封面图与题卡画布同为 853×1844，比例完全一致，
+   在舞台里按 contain 就是满屏，不留白也不裁切（contain 只是兜底：万一换了别的比例的图不会变形）。
+   图里「开始测试」按钮的像素框由实测得出，换算成屏幕坐标叠热区。 */
+var COVER_W = 853, COVER_H = 1844;
+var BTN = { x0:220, y0:1550, x1:636, y1:1678 };
+var HIT_PAD = 26;                 /* 热区外扩，手指好点 */
+
+function layoutCover(){
+  var el = $('cover');
+  if(!el || el.classList.contains('hidden')) return;
+  var W = stage.clientWidth, H = stage.clientHeight;
+  var s  = Math.min(W / COVER_W, H / COVER_H);
+  var ox = (W - COVER_W * s) / 2;
+  var oy = (H - COVER_H * s) / 2;
+  var hit = $('coverHit');
+  hit.style.left   = (ox + (BTN.x0 - HIT_PAD) * s) + 'px';
+  hit.style.top    = (oy + (BTN.y0 - HIT_PAD) * s) + 'px';
+  hit.style.width  = ((BTN.x1 - BTN.x0 + HIT_PAD * 2) * s) + 'px';
+  hit.style.height = ((BTN.y1 - BTN.y0 + HIT_PAD * 2) * s) + 'px';
+}
+
+function init(){
+  stage = $('stage');
+  elQnum = $('qnum'); elStem = $('stem');
+  elOpt = [$('opt0'), $('opt1')];
+  elPrev = $('hitPrev'); elNext = $('hitNext');
+  elResult = $('result');
+  elPlate = $('plate');
+
+  layout();
+  layoutCover();
+  drawHint();
+  drawBubble();
+  $('coverHit').addEventListener('click', enterStoryA);
+  $('storyA').addEventListener('click', enterStoryB);
+  $('storyB').addEventListener('click', tapStoryB);
+  $('pickM').addEventListener('click', function(){ startWith('M'); });
+  $('pickF').addEventListener('click', function(){ startWith('F'); });
+  elOpt[0].addEventListener('click', function(){ choose(0); });
+  elOpt[1].addEventListener('click', function(){ choose(1); });
+  elPrev.addEventListener('click', prev);
+  elNext.addEventListener('click', next);
+
+  window.addEventListener('resize', function(){
+    layout();
+    layoutCover();
+  });
+  window.addEventListener('orientationchange', function(){
+    setTimeout(function(){ layout(); layoutCover(); }, 260);
+  });
+
+  render();
+}
+
+if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+else init();
+
+})();
+</script>
+</body>
+</html>
