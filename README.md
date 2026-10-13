@@ -30,12 +30,6 @@ python3 -m http.server 8000
 
 然后浏览器访问 `http://localhost:8000`
 
-## 部署到 GitHub Pages
-
-仓库 **Settings → Pages** → Source 选 `Deploy from a branch` → Branch 选 `main`、目录选 `/ (root)` → **Save**。
-
-等一分钟，访问 `https://<用户名>.github.io/annual-leave-month-quiz/`
-
 ## 逻辑
 
 - 封面页只有一个热区（图里画好的「开始测试」），点掉封面层进剧情
