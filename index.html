@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#2B1810">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>你适合几月请年假</title>
+<title>你适合几月离职</title>
 <style>
 :root{
   --u: 1px;
@@ -351,8 +351,8 @@ var Q4 = {
        b:{t:'想看草原和寺庙，路比较缓。',             c:'甘南'} }
 };
 
-var Q5 = { stem:'年假摆在你面前，你怎么用？',
-  a:'订票，走人。年假攒着也是过期。', b:'哪也不去，睡到自然醒。' };
+var Q5 = { stem:'离职摆在你面前，你怎么用？',
+  a:'订票，走人。拖下去只会更累。', b:'哪也不去，睡到自然醒。' };
 
 /* 由前三题答案推导所属包 */
 function packOf(a1, a2, a3){
@@ -383,15 +383,15 @@ function questionAt(i, ans){
 function countdown(m){
   var now = new Date().getMonth() + 1;
   var d = m - now;
-  if(d === 0) return '就是现在。去提申请。';
+  if(d === 0) return '就是现在。去提离职。';
   if(d < 0)   return '今年的 ' + m + ' 月过了。要么等明年，要么下个月就走。';
-  if(d <= 3)  return '现在是 ' + now + ' 月，还有 ' + d + ' 个月。提前两周报备就够，机票还没涨。';
+  if(d <= 3)  return '现在是 ' + now + ' 月，还有 ' + d + ' 个月。提前一个月提就行，机票还没涨。';
   if(d <= 8)  return '现在是 ' + now + ' 月，还有 ' + d + ' 个月。够你把活儿排开，也够你等一张便宜的机票。';
-  return '现在是 ' + now + ' 月，还有 ' + d + ' 个月。时间还长，先把年假攒够。';
+  return '现在是 ' + now + ' 月，还有 ' + d + ' 个月。时间还长，先把底气攒够。';
 }
 function leaveApplyText(m){
   var prev = (m === 1) ? 12 : m - 1;
-  return prev + ' 月中旬把申请交上去，' + m + ' 月初落地，刚好';
+  return prev + ' 月中旬提离职，' + m + ' 月初落地，刚好';
 }
 
 /* ============ 3. 状态与渲染 ============ */
@@ -459,14 +459,14 @@ function buildResult(){
   var shareText;
 
   if(q5 === 1){                       /* B 线：躺平结局 */
-    shareText = '我哪个月请年假都行。你呢？';
+    shareText = '我哪个月离职都行。你呢？';
     elResult.appendChild(line('你的答案', 24, '#8A5A42'));
     elResult.appendChild(spacer(8));
     elResult.appendChild(line('哪也不去', 50, '#4F1E0E'));
     elResult.appendChild(sep());
     elResult.appendChild(line('所以', 24, '#8A5A42'));
     elResult.appendChild(spacer(8));
-    elResult.appendChild(line('你哪个月请年假都行', 50, '#B8491A'));
+    elResult.appendChild(line('你哪个月离职都行', 50, '#B8491A'));
     elResult.appendChild(spacer(16));
     elResult.appendChild(line('不挑地方的人，也不挑月份。', 26, '#4F1E0E'));
     elResult.appendChild(spacer(6));
@@ -480,10 +480,10 @@ function buildResult(){
     elResult.appendChild(line('1–12 月全部点亮', 24, '#8A5A42'));
     elResult.appendChild(sep());
     elResult.appendChild(line('哪天你想出门了，回来再测一次。', 25, '#4F1E0E'));
-  }else{                              /* A 线：年假月 */
+  }else{                              /* A 线：离职月 */
     var city = Q4[packOf(ans[0], ans[1], ans[2])][ans[3] === 0 ? 'a' : 'b'].c;
     var info = CITIES[city];
-    shareText = '我的年假该请 ' + info.m + ' 月，去' + city + '。你呢？';
+    shareText = '我该在 ' + info.m + ' 月离职，去' + city + '。你呢？';
 
     elResult.appendChild(line('你想去的地方', 24, '#8A5A42'));
     elResult.appendChild(spacer(8));
@@ -495,7 +495,7 @@ function buildResult(){
     elResult.appendChild(spacer(8));
     elResult.appendChild(line(info.why, 25, '#4F1E0E', 576, 0.5));
     elResult.appendChild(sep());
-    elResult.appendChild(line('你的年假该请', 24, '#8A5A42'));
+    elResult.appendChild(line('你该离职的月份', 24, '#8A5A42'));
     elResult.appendChild(spacer(4));
     elResult.appendChild(line(info.m + ' 月', 72, '#4F1E0E'));
     elResult.appendChild(spacer(16));
@@ -589,8 +589,8 @@ function reset(){
 /* ============ 6. 过场剧情 ============
    封面之后先走两页剧情：storyA 无气泡，storyB 气泡里逐句出字。
    气泡白区实测（853×1844 基准）：x 49–339 / y 597–718，中心 (194, 658)，
-   字面高 28 时最长的「先请年假冷静一下」约 241px，塞得进 280 的可用宽。 */
-var BUBBLE_LINES = ['……', '受够了', '要不离职吧？', '先请年假冷静一下', '现在吗', '我想想'];
+   字面高 28 时最长的「要不离职吧？」约 168px，塞得进 280 的可用宽。 */
+var BUBBLE_LINES = ['……', '受够了', '要不离职吧？', '冷静一下？', '现在吗', '我想想'];
 var bubbleIdx = 0;
 
 function drawBubble(){
